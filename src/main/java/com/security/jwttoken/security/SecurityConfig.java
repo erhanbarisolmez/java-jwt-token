@@ -8,50 +8,49 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
+
+import com.security.jwttoken.model.Role;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
   
-  @Bean
-  public BCryptPasswordEncoder bCryptPasswordEncoder(){
-    return new BCryptPasswordEncoder();
+  private final UserDetailsService userDetailsService;
+
+  public SecurityConfig(UserDetailsService userDetailsService){
+    this.userDetailsService = userDetailsService;
   }
 
-  @Bean
-  public UserDetailsService users(){
-    UserDetails user1 = User.builder()
-      .username("user")
-      .password(bCryptPasswordEncoder().encode("pass"))
-      .roles("USER")
-    .build();
-
-    UserDetails admin = User.builder()
-      .username("admin")
-      .password(bCryptPasswordEncoder().encode("pass"))
-      .roles("ADMIN")
-      .build(); 
-      
-    return new InMemoryUserDetailsManager(user1, admin);
-  }
 
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity security) throws Exception{
+  public SecurityFilterChain filterChain(HttpSecurity security, HandlerMappingIntrospector introspector) throws Exception{
+    MvcRequestMatcher.Builder mvcRequestBuilder = new MvcRequestMatcher.Builder(introspector);
+    
     security
       .headers(x -> x.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-      .csrf(AbstractHttpConfigurer::disable)
-      .formLogin(AbstractHttpConfigurer::disable)
-      .authorizeHttpRequests(x -> x.requestMatchers("/public/hello/**").hasRole("ADMIN"))
-      .authorizeHttpRequests(x -> x.requestMatchers("/public/**", "/auth/**").permitAll())
-      .authorizeHttpRequests(x -> x.anyRequest().authenticated())
-      .httpBasic(Customizer.withDefaults());
+      .csrf(
+        csrfConfig -> csrfConfig.ignoringRequestMatchers(mvcRequestBuilder.pattern("/public/**"))
+        )
+      .userDetailsService(userDetailsService) 
+      .authorizeHttpRequests(x -> 
+        x 
+          .requestMatchers("/private/user").hasRole(Role.ROLE_USER.getValue())
+          .requestMatchers("/private/admin").hasAnyRole(Role.ROLE_ADMIN.getValue(), Role.ROLE_SADMIN.getValue())
+          .requestMatchers("/private/sadmin").hasRole(Role.ROLE_SADMIN.getValue())
+          .requestMatchers("/public/**").permitAll()
+          .requestMatchers("/private/**")
+                  .hasAnyRole(
+                  Role.ROLE_ADMIN.getValue(),
+                  Role.ROLE_SADMIN.getValue())
+            .anyRequest().authenticated()
+      )
+          .formLogin(AbstractHttpConfigurer::disable) 
+          .httpBasic(Customizer.withDefaults());
 
       return security.build();
 
