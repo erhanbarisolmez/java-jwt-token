@@ -1,5 +1,7 @@
 package com.security.jwttoken;
 
+import java.util.Set;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -7,7 +9,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import com.security.jwttoken.dto.CreateUserRequest;
 import com.security.jwttoken.model.Role;
 import com.security.jwttoken.services.UserService;
-import java.util.Set;
 
 @SpringBootApplication
 public class JwtTokenApplication implements CommandLineRunner{
@@ -24,10 +25,12 @@ public class JwtTokenApplication implements CommandLineRunner{
 
 	@Override
 	public void run(String... args) throws Exception {
-		createDummyData();
+		// createDummyData();
 	}
 
 	private void createDummyData(){
+
+
     CreateUserRequest request = CreateUserRequest.builder()
 			.name("Barış")
 			.username("baris")
@@ -56,5 +59,7 @@ public class JwtTokenApplication implements CommandLineRunner{
 		userService.createUser(request3);
 
 	}
+
+	
 
 }

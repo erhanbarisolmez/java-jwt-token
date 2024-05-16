@@ -1,5 +1,6 @@
 package com.security.jwttoken.services;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -26,6 +27,13 @@ public class UserService {
     return userRepository.findByUsername(username);
   }
 
+  public void createUserIfNotExists(CreateUserRequest request){
+    Optional<User> existingUser = userRepository.findByUsername(request.username());
+    if (existingUser.isEmpty()) {
+      createUser(request);
+    }
+  }
+
   public User createUser(CreateUserRequest request){
     User newUser = User.builder()
       .name(request.name())
@@ -41,6 +49,11 @@ public class UserService {
 
       return userRepository.save(newUser);
   }
+
+  public List<User> findAll() {
+    return userRepository.findAll();
+  }
   
+
 }
 

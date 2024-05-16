@@ -29,6 +29,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @EqualsAndHashCode
 @Builder
+
 public class User implements UserDetails { // UserDetails, Security ait bir sınıf olduğunu belirtir
 
   @Id
@@ -43,12 +44,12 @@ public class User implements UserDetails { // UserDetails, Security ait bir sın
   private boolean accountNonLocked;
   private boolean credentialNonExpired;
   private boolean isCredentialsNonExpired;
-  
+
   // kullanıcının rollerinin tamamını farklı tabloda(liste) tuttuk
-  @ElementCollection(targetClass =  Role.class, fetch = FetchType.EAGER)
+  @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
   @JoinTable(name = "authorities", joinColumns = @JoinColumn(name = "user_id"))
   @Column(name = "role", nullable = false)
   @Enumerated(EnumType.STRING)
   private Set<Role> authorities;
-  
+
 }
